@@ -13,5 +13,9 @@ jobs:
           net localgroup "Remote Desktop Users" runner /add
           netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
       - name: Tunnel via Pinggy
+        shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=no -p 443 -R0:localhost:3389 free.pinggy.io
+          while true; do
+            ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -p 443 -R0:localhost:3389 tcp@free.pinggy.io 2>&1 | tee -a /tmp/pinggy.log
+            sleep 5
+          done
