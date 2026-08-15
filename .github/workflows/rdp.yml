@@ -1,0 +1,17 @@
+name: WinRDP
+on: workflow_dispatch
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 350
+    steps:
+      - name: Enable Remote Desktop
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
+          Set-ItemProperty -Path ('HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp') -Name UserAuthentication -Value 0
+          net user runner P@ssw0rd!
+          net localgroup "Remote Desktop Users" runner /add
+          netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+      - name: Tunnel via Pinggy
+        run: |
+          ssh -o StrictHostKeyChecking=no -p 443 -R0:localhost:3389 free.pinggy.io
