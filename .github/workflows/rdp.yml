@@ -6,23 +6,15 @@ jobs:
     timeout-minutes: 350
     steps:
       - name: Enable Remote Desktop
-        shell: pwsh
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name fDenyTSConnections -Value 0
           Set-ItemProperty -Path ('HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp') -Name UserAuthentication -Value 0
           netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
-
-          $pw = ConvertTo-SecureString 'P@ssw0rd!' -AsPlainText -Force
-          foreach ($name in @('runner', 'runneradmin')) {
-            if (Get-LocalUser -Name $name -ErrorAction SilentlyContinue) {
-              Set-LocalUser -Name $name -Password $pw -PasswordNeverExpires $true
-            } else {
-              New-LocalUser -Name $name -Password $pw -FullName $name -PasswordNeverExpires $true
-            }
-            Enable-LocalUser -Name $name
-            Add-LocalGroupMember -Group 'Administrators' -Member $name
-            Add-LocalGroupMember -Group 'Remote Desktop Users' -Member $name
-          }
+          net user runner P@ssw0rd! /add
+          net user runneradmin P@ssw0rd!
+          net localgroup "Remote Desktop Users" runner /add
+          net localgroup "Remote Desktop Users" runneradmin /add
+          net localgroup "Administrators" runner /add
 
       - name: Tunnel via Pinggy
         shell: bash
